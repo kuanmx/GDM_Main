@@ -3,8 +3,6 @@
 #ifndef PICONTROL_H
 #define PICONTROL_H
 
-#include "../intelliSense.h"
-
 class EncodedMotor; 
 
 class PIcontrol {

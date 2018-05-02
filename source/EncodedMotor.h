@@ -5,7 +5,6 @@
 #ifndef MBEDCLI2_ENCODEDMOTOR_H
 #define MBEDCLI2_ENCODEDMOTOR_H
 
-#include "../intelliSense.h"
 #include <mbed.h>
 #include <tuple>
 

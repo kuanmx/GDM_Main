@@ -30,16 +30,34 @@ PROJECT(GDM_Main C CXX ASM)
 
 # uncomment below to have a verbose build process
 #SET(CMAKE_VERBOSE_MAKEFILE ON)
+SET(SOURCES main.cpp
+        source/EncodedMotor.h
+        source/EncodedMotor.cpp
+        source/ShiftReg7Seg.h
+        source/ShiftReg7Seg.cpp
+        source/PIcontrol.h
+        source/PIcontrol.cpp
+        source/MotorControl.h
+        source/MotorControl.cpp
+        source/DebugMonitor.h
+        source/DebugMonitor.cpp
+        source/EventVariable.h
+        Libraries/TextLCD/TextLCD.h
+        Libraries/TextLCD/TextLCD_Config.h
+        Libraries/TextLCD/TextLCD_UDC.h
+        Libraries/TextLCD/TextLCD.cpp
+        )
 
 SET(LD_SYS_LIBS "-Wl,--start-group -lstdc++ -lsupc++ -lm -lc -lgcc -lnosys  -Wl,--end-group")
 
 SET(CMAKE_C_FLAGS "-std=gnu99 -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -fmessage-length=0 -fno-exceptions -fno-builtin -ffunction-sections -fdata-sections -funsigned-char -MMD -fno-delete-null-pointer-checks -fomit-frame-pointer -O0 -g3 -DMBED_DEBUG -DMBED_TRAP_ERRORS_ENABLED=1 -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=softfp -include mbed_config.h")
-SET(CMAKE_CXX_FLAGS "-std=gnu++98 -fno-rtti -Wvla -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -fmessage-length=0 -fno-exceptions -fno-builtin -ffunction-sections -fdata-sections -funsigned-char -MMD -fno-delete-null-pointer-checks -fomit-frame-pointer -O0 -g3 -DMBED_DEBUG -DMBED_TRAP_ERRORS_ENABLED=1 -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=softfp  -include mbed_config.h")
+SET(CMAKE_CXX_FLAGS "-std=c++17 -fno-rtti -Wvla -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -fmessage-length=0 -fno-exceptions -fno-builtin -ffunction-sections -fdata-sections -funsigned-char -MMD -fno-delete-null-pointer-checks -fomit-frame-pointer -O0 -g3 -DMBED_DEBUG -DMBED_TRAP_ERRORS_ENABLED=1 -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=softfp  -include mbed_config.h")
 SET(CMAKE_ASM_FLAGS "-x assembler-with-cpp -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -fmessage-length=0 -fno-exceptions -fno-builtin -ffunction-sections -fdata-sections -funsigned-char -MMD -fno-delete-null-pointer-checks -fomit-frame-pointer -O0 -g3 -DMBED_DEBUG -DMBED_TRAP_ERRORS_ENABLED=1 -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=softfp  -include mbed_config.h")
 SET(CMAKE_CXX_LINK_FLAGS "-Wl,--gc-sections -Wl,--wrap,main -Wl,--wrap,__malloc_r -Wl,--wrap,__free_r -Wl,--wrap,__realloc_r -Wl,--wrap,__memalign_r -Wl,--wrap,__calloc_r -Wl,--wrap,exit -Wl,--wrap,atexit -Wl,-n -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=softfp ")
 SET(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} ${LD_SYS_LIBS} -T ${CMAKE_BINARY_DIR}/GDM_Main_pp.link_script.ld")
 
 ADD_DEFINITIONS(
+        -std=c++17
   -DARM_MATH_CM4
   -DDEVICE_ANALOGIN=1
   -DDEVICE_FLASH=1
@@ -182,6 +200,7 @@ INCLUDE_DIRECTORIES(
 
 # executable GDM_Main
 ADD_EXECUTABLE(GDM_Main
+        ${SOURCES}
   mbed-os/cmsis/TARGET_CORTEX_M/arm_math.h
   mbed-os/cmsis/TARGET_CORTEX_M/cmsis_armcc.h
   mbed-os/cmsis/TARGET_CORTEX_M/cmsis_armclang.h
@@ -1075,25 +1094,35 @@ add_custom_command(TARGET GDM_Main POST_BUILD
 SET(MBED_BUILD_PROFILE "")
 STRING(TOLOWER ${CMAKE_BUILD_TYPE} LOWERCASE_CMAKE_BUILD_TYPE)
 IF(LOWERCASE_CMAKE_BUILD_TYPE MATCHES debug)
-    SET(MBED_BUILD_PROFILE "mbed-os/tools/profiles/debug.json")
-ELSEIF(LOWERCASE_CMAKE_BUILD_TYPE MATCHES relwithdebinfo)
-    SET(MBED_BUILD_PROFILE "mbed-os/tools/profiles/develop.json")
+  SET(MBED_BUILD_PROFILE "build_profiles/debug_poh.json")
 ELSEIF(LOWERCASE_CMAKE_BUILD_TYPE MATCHES release)
-    SET(MBED_BUILD_PROFILE "mbed-os/tools/profiles/release.json")
+  SET(MBED_BUILD_PROFILE "build_profiles/release_poh.json")
 ELSEIF(LOWERCASE_CMAKE_BUILD_TYPE MATCHES minsizerel)
-    SET(MBED_BUILD_PROFILE "mbed-os/tools/profiles/release.json")
+  SET(MBED_BUILD_PROFILE "build_profiles/release_poh.json")
 ELSE()
   MESSAGE(WARNING "Build type '${CMAKE_BUILD_TYPE}' is unknown, using debug profile")
-  SET(MBED_BUILD_PROFILE "mbed-os/tools/profiles/debug.json")
+  SET(MBED_BUILD_PROFILE "build_profiles/debug_poh.json")
 ENDIF()
 
 # optional custom target to build via mbed-cli
 ADD_CUSTOM_TARGET(mbed-cli-build
-        COMMAND ${CMAKE_COMMAND} -E echo "mbed compile --build BUILD/${CMAKE_BUILD_TYPE} --profile ${MBED_BUILD_PROFILE}"
-        COMMAND mbed compile --build BUILD/${CMAKE_BUILD_TYPE} --profile ${MBED_BUILD_PROFILE}
+        COMMAND ${CMAKE_COMMAND} -E echo "mbed compile -t GCC_ARM -m NUCLEO_F411RE --build BUILD1/${CMAKE_BUILD_TYPE} --profile ${MBED_BUILD_PROFILE}"
+        COMMAND mbed compile -t GCC_ARM -m NUCLEO_F411RE --build BUILD1/${CMAKE_BUILD_TYPE} --profile ${MBED_BUILD_PROFILE}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        SOURCES ${SOURCE_FILES} ${SYS_SOURCE_FILES})
+ADD_CUSTOM_TARGET(mbed-cli-build-release
+        COMMAND ${CMAKE_COMMAND} -E echo "mbed compile -t GCC_ARM -m NUCLEO_F411RE --profile build_profiles/release_poh.json"
+        COMMAND mbed compile -t GCC_ARM -m NUCLEO_F411RE --profile build_profiles/release_poh.json
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         SOURCES ${SOURCE_FILES} ${SYS_SOURCE_FILES})
 
+add_custom_command(TARGET mbed-cli-build-release POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E echo "Build Completed"
+        )
+#add_custom_command(TARGET mbed-cli-build-release POST_BUILD
+#        COMMAND ${CMAKE_COMMAND} -E echo "Copying file to F:/"
+#        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/BUILD/NUCLEO_F411RE/GCC_ARM/nucleo_motor.bin "F:/"
+#        )
 IF(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/project.cmake)
   INCLUDE(${CMAKE_CURRENT_SOURCE_DIR}/project.cmake)
 ELSE()
