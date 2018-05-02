@@ -10,7 +10,6 @@
 #include <memory>
 
 namespace{
-    //bytes are in order of: a, b, c, d, e, f, g, DP
     //bytes are in order of: g, f, e, d, c, b, a, DP
     const uint8_t characterMap[] = {0b01111110, //0
                                     0b00001100, //1

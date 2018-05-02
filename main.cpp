@@ -1,4 +1,3 @@
-#include "mbed_config.h"
 #include <mbed.h>
 #include <vector>
 #include "source/EncodedMotor.h"	// motor encoder
