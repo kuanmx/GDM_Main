@@ -13,13 +13,13 @@ This source code is designed for develop with CLion with CMake. Tested on operat
 
 ---
 #### Setup Procedure (based on Fedora)
+(if no C++ compiler) Install C++ compiler `yum install gcc-c++`
 (optional) Install [Development Tools](https://www.2daygeek.com/install-development-tools-on-ubuntu-debian-arch-linux-mint-fedora-centos-rhel-opensuse/#)
                 Group: `# yum groups install "Development Tools"`
 
 1. Install following compiler: 
-   * arm-none-eabi-gcc  `dnf install arm-none-eabi-g++`
    * arm-none-eabi-g++  `dnf install arm-none-eabi-gcc-cs-c++`
-   * arm-none-eabi-newlib `yum install arm-none-eabi-newlib`
+   * arm-none-eabi-newlib `dnf install arm-none-eabi-newlib`
    
 2. Install mbed-cli
    * Update Python  `pip install --upgrade pip`
