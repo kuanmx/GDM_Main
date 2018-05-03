@@ -47,27 +47,7 @@ SET(SOURCES main.cpp
         Libraries/TextLCD/TextLCD_UDC.h
         Libraries/TextLCD/TextLCD.cpp
         )
-## Detect nucleo mount path
-execute_process(COMMAND mbed detect OUTPUT_VARIABLE mbedDetectOutput)
-string(REPLACE " " ";" mbedDetectOutputList ${mbedDetectOutput})
-list(LENGTH mbedDetectOutputList len)
 
-SET(ITERCOUNT 0)
-SET(PATH_INDEX -1)
-while(ITERCOUNT LESS len)
-    list(GET mbedDetectOutputList ${ITERCOUNT} mbedOutputString)
-    #    execute_process(COMMAND ${CMAKE_COMMAND} -E echo "${mbedOutputString}")
-    string(COMPARE EQUAL "${mbedOutputString}" "mounted" result1)
-    if(${result1})
-        MATH(EXPR mountPathIndex "${ITERCOUNT}+1")
-        list(GET mbedDetectOutputList "${mountPathIndex}" mountPath)
-        string(REPLACE "," "/" mountPath ${mountPath})
-        execute_process(COMMAND ${CMAKE_COMMAND} -E echo "nucleo mount path: ${mountPath}")
-    endif()
-    MATH(EXPR ITERCOUNT "${ITERCOUNT}+1")
-endwhile()
-
-###
 
 
 SET(LD_SYS_LIBS "-Wl,--start-group -lstdc++ -lsupc++ -lm -lc -lgcc -lnosys  -Wl,--end-group")
@@ -1143,7 +1123,27 @@ add_custom_command(TARGET mbed-cli-build-release POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E echo "Build Completed"
         )
 
+## Detect nucleo mount path
+execute_process(COMMAND mbed detect OUTPUT_VARIABLE mbedDetectOutput)
+string(REPLACE " " ";" mbedDetectOutputList ${mbedDetectOutput})
+list(LENGTH mbedDetectOutputList len)
 
+SET(ITERCOUNT 0)
+SET(PATH_INDEX -1)
+while(ITERCOUNT LESS len)
+    list(GET mbedDetectOutputList ${ITERCOUNT} mbedOutputString)
+    #    execute_process(COMMAND ${CMAKE_COMMAND} -E echo "${mbedOutputString}")
+    string(COMPARE EQUAL "${mbedOutputString}" "mounted" result1)
+    if(${result1})
+        MATH(EXPR mountPathIndex "${ITERCOUNT}+1")
+        list(GET mbedDetectOutputList "${mountPathIndex}" mountPath)
+        string(REPLACE "," "/" mountPath ${mountPath})
+        execute_process(COMMAND ${CMAKE_COMMAND} -E echo "nucleo mount path: ${mountPath}")
+    endif()
+    MATH(EXPR ITERCOUNT "${ITERCOUNT}+1")
+endwhile()
+
+###
 
 #string(FIND ${FOO} "mounted" BAR1)
 #execute_process(COMMAND ${CMAKE_COMMAND} -E echo ${BAR1})
