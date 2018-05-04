@@ -36,3 +36,10 @@ This source code is designed for develop with CLion with CMake. Tested on operat
   
   OR
   * Deploy mbed-os after cloning `mbed deploy`
+  
+  
+4. Install arduino for serial monitor
+    ```
+    sudo yum install arduino
+    sudo yum install java-1.8.0-openjdk
+    ```
