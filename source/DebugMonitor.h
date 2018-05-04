@@ -18,7 +18,7 @@ class EncodedMotor;
  */
 class DebugMonitor {
 public:
-	DebugMonitor(PinName knobPin, EncodedMotor* motorPtr, RawSerial* rawserialPtr, PinName I2C1_SDA = PB_9, PinName I2C1_SDL = PB_8,
+	DebugMonitor(AnalogIn* knobPin, EncodedMotor* motorPtr, RawSerial* rawserialPtr, PinName I2C1_SDA = PB_9, PinName I2C1_SDL = PB_8,
 		uint16_t lcdAddr = 0X3F, TextLCD::LCDType lcdtype = TextLCD::LCD20x4);
 	void printSignal(); 
 
@@ -27,7 +27,7 @@ private:
 	I2C i2c;
 	TextLCD_I2C lcd; 
 
-	AnalogIn _knob;
+	AnalogIn* _knob;
 	EncodedMotor *_motorPtr;
 	RawSerial* _rawserialPtr; 
 	

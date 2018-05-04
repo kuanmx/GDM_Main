@@ -6,12 +6,12 @@ PIcontrol::PIcontrol(float Kp, float Ki)
 {
 }
 
-double PIcontrol::compensateSignal(double error, unsigned long timestep) 
+float PIcontrol::compensateSignal(float error, unsigned long long int timestep)
 {
 	_compensateError = 0.0f; 
 
-	_thisError = error; 
-	_timestep = (double) timestep / 1000000;
+	_thisError = error;
+	_timestep = timestep;
 
 	_compensateError += P_signal(); 
 	_compensateError += I_signal();
@@ -26,6 +26,6 @@ float PIcontrol::P_signal()
 
 float PIcontrol::I_signal()
 {
-	_accError_t += _thisError * _timestep; 
+	_accError_t += _thisError * _timestep /1000000;
 	return _Ki * (_accError_t); 
 }

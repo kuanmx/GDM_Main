@@ -1,7 +1,7 @@
 #include "DebugMonitor.h"
 #include "EncodedMotor.h"
 
-DebugMonitor::DebugMonitor(PinName knobPin, EncodedMotor* motorPtr, RawSerial* rawserialPtr, PinName I2C1_SDA, PinName I2C1_SDL, uint16_t lcdAddr, TextLCD::LCDType lcdtype) :
+DebugMonitor::DebugMonitor(AnalogIn* knobPin, EncodedMotor* motorPtr, RawSerial* rawserialPtr, PinName I2C1_SDA, PinName I2C1_SDL, uint16_t lcdAddr, TextLCD::LCDType lcdtype) :
 	i2c(I2C1_SDA, I2C1_SDL), lcd(&i2c, lcdAddr << 1, lcdtype),
 	_knob(knobPin), _motorPtr(motorPtr), _rawserialPtr(rawserialPtr) 
 {
@@ -35,5 +35,5 @@ void DebugMonitor::printSignal() {
 	//// Output to Serial monitor
 	_rawserialPtr->printf("---\n"); 
 	_rawserialPtr->printf("refSpeed: %f\n Motor RPM: %f\n TimeDiff(us): %llu\n",
-		_knob.read()*24.0f, _speed, _timeDiff); 
+		_knob->read()*24.0f, _speed, _timeDiff);
 }

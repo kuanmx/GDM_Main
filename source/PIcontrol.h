@@ -9,7 +9,7 @@ class PIcontrol {
 public:
 	PIcontrol() = delete; 
 	PIcontrol(float Kp, float Ki);
-	double compensateSignal(double error, unsigned long timestep); 
+	float compensateSignal(float error, unsigned long long int timestep);
 
 protected: 
 	float P_signal();
@@ -21,7 +21,7 @@ private:
 
 	float _thisError = 0.0f; 
 	float _accError_t = 0.0f; 
-	float _timestep = 0.0f; 
+	unsigned long long _timestep = 0;
 	float _compensateError = 0.0f; 
 
 };
