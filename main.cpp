@@ -28,7 +28,7 @@ PinName MotorEncoderB = PA_8;		// connect MotorEncoderB (purple) to PA_8 (D7)
 
 // LED Indicator Port
 DigitalOut MotorLED = PB_15;		// connect MotorLED to PB_15
-DigitalOut SolenoidOnLED = PB_14;	// connect SolenoidOnLED to PB_14
+DigitalOut TorchLED = PB_14;		// connect TorchLED to PB_14
 // Port Declaration
 AnalogIn refSpeed(knob);			// Reference Speed from user through potentiometer
 PwmOut MotorEnablePin(MotorEnable);
@@ -36,11 +36,12 @@ DigitalOut MotorDirectionPin1(MotorDirection1);
 DigitalOut MotorDirectionPin2(MotorDirection2);
 
 //// Initiate object
-RawSerial pc(SERIAL_TX, SERIAL_RX, 115200);		// serial communication protocol
+RawSerial pc(SERIAL_TX, SERIAL_RX, 115200);		                // serial communication protocol
 EncodedMotor encoder(MotorEncoderA, MotorEncoderB, 1848*4, 10, EncodeType::X4);		// Encoded Motor object
 std::unique_ptr<MotorControl> motor1 = std::make_unique<MotorControl>
         (&pc, &MotorEnablePin, &MotorDirectionPin1, &MotorDirectionPin2, &encoder, 0.16, 0.01);		// motor controller object, Kp and Ki specified
-DebugMonitor debugger(&refSpeed, &encoder, &pc);		// update status through LCD2004 and Serial Monitor
+DebugMonitor debugger(&refSpeed, &encoder, &pc);		        // update status through LCD2004 and Serial Monitor
+ShiftReg7Seg disp1(SPI_MOSI, SPI_MISO, SPI_SCK, SPI_CS, 4, D9); // 7 segments display
 
 //// Declare interrupt
 Ticker statusUpdater;			// Periodic Interrupt for debugging purpose
@@ -50,22 +51,27 @@ InterruptIn weldingBtn(WeldStartStop);		// Welding Button Interrupt
 
 //// Declare thread
 Thread motorLEDBlinking;		// Thread to perform LED Blinking
+Thread statusUpdateThread;      // Thread to perform Status Update
+Thread dispThread;              // Thread to display 7 segments display
+
+//// Declare event flag
+EventFlags statusUpdateFlag;
+
 //// Define constants
 // volatile bool motorStartBtnChange = false;		// Start motor flag
 volatile bool prevMotorSteady = false;		// Store previous motor steady state
+volatile float currentSpeed;
+
 //// Fwd declare
-void I2C_scan(); 
-void statusUpdate();
+void I2C_scan();
 void motorStartBtnChangeEvent(bool &);		// Determine motor start status
 void motorRunner(); 
-void MotorLEDBlinker(bool&); 
-
+void MotorLEDBlinker(bool&);
 
 // Initiate EventVariable
-EventVariable<bool> statusUpdateFlag(true, &statusUpdate);
 EventVariable<bool> motorStartBtnChange(false, &motorStartBtnChangeEvent);
 EventVariable<bool> motorSteadySignal(true, &MotorLEDBlinker);
-EventVariable<bool> weldSignal(false,[](){SolenoidOnLED != SolenoidOnLED; });
+EventVariable<bool> weldSignal(false,[](){TorchLED != TorchLED; });
 
 //// Define function
 void I2C_scan()
@@ -111,16 +117,21 @@ void I2C_scan()
 		pc.printf("Valid Address: %#X ", val);		// print valid address
 	}
 }
-void statusUpdate()
+void statusUpdateEvent()
 {
-	// Output status
-	debugger.printSignal();
+    while(1)
+    {
+        statusUpdateFlag.wait_all(0x1);
 
-	// Output Flags to Serial monitor
-	pc.printf("motorStartBtnChange: %d\n motorSteadySignal: %d\n weldSignal: %d\n SolenoidEnable = %d\n",
-		motorStartBtnChange.value, motorSteadySignal.value, weldSignal.value, SolenoidEnable.read());
-	pc.printf("RefSpeed: %f\nCompensate: %f\n Speed: %f\n Error: %lf\n AdjError: %lf\n",
-		refSpeed.read()*100, motor1->readComp(), motor1->readSpeed(), motor1->readError(), motor1->readAdjError());
+        // Output status
+        debugger.printSignal();
+
+        // Output Flags to Serial monitor
+        pc.printf("motorStartBtnChange: %d\n motorSteadySignal: %d\n weldSignal: %d\n SolenoidEnable = %d\n",
+                  motorStartBtnChange.value, motorSteadySignal.value, weldSignal.value, SolenoidEnable.read());
+        pc.printf("RefSpeed: %f\nCompensate: %f\n Speed: %f\n Error: %lf\n AdjError: %lf\n",
+                  refSpeed.read()*100, motor1->readComp(), motor1->readSpeed(), motor1->readError(), motor1->readAdjError());
+    }
 }
 void motorStartBtnChangeEvent(bool &motorState) {
 	// Active-Deactivate Motor Rotation
@@ -131,7 +142,7 @@ void motorStartBtnChangeEvent(bool &motorState) {
 	else {
 		motorSteadySignal = false;
 	}
-	pc.printf("Button pressed %d\n", motorState);
+	// pc.printf("Button pressed %d\n", motorState);
 }
 void motorRunner() 
 {
@@ -146,14 +157,10 @@ void motorStopper()
 }
 void MotorLEDBlinker(bool& motorSteady)			// Run motor and set motorOnLED to blinking / solid light
 {
+    pc.printf("MotorLEDBlinker! \n");
 	if (motorSteady) { motorBlinkLEDTicker.detach(); MotorLED = 1; }
 	else motorBlinkLEDTicker.attach([]() {MotorLED = !MotorLED; }, 0.5f);
 }
-
-
-ShiftReg7Seg disp1(SPI_MOSI, SPI_MISO, SPI_SCK, SPI_CS, 4, D9);
-Thread dispThread;
-volatile float currentSpeed;
 void displayCurrentSpeed(){
 	disp1.display(currentSpeed);
 	wait(0.1);
@@ -164,19 +171,24 @@ int main() {
 	// I2C Scanner.. comment out if not used...
 	// I2C_scan();
 
+
 	// Initiate Interrupt and Ticker
 	motorBtn.rise([]() {motorStartBtnChange = !motorStartBtnChange; });				// motorBtn OnChange
 	weldingBtn.rise([&]() {
 		bool toSolenoid = motorStartBtnChange.value && motorSteadySignal.value && !weldSignal;
 		toSolenoid ? weldSignal = true : weldSignal = false; });					// weldingBtn OnChange
+	statusUpdater.attach([](){statusUpdateFlag.set(0x1); }, 0.5f);					// periodic status update via flag
 
-	statusUpdater.attach(&statusUpdate, 0.5f);						// periodic status update
+    // Start Thread
 	dispThread.start(displayCurrentSpeed);			// 7-segment Thread Start
-	SolenoidOnLED = 0; 								// Initialize SolenoidOnLED
+    statusUpdateThread.start(&statusUpdateEvent);   // Start Status Update Event
+
+    // Initialize Output
+    TorchLED = 0; 								// Initialize TorchLED
 
 	pc.printf("Ready\n");
 
-	while (1) {//
+	while (1) {
 		if (motorStartBtnChange.value) {motorRunner();}
 		else { motorStopper(); }
 	}

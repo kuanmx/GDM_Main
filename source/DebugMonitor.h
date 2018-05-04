@@ -18,9 +18,10 @@ class EncodedMotor;
  */
 class DebugMonitor {
 public:
-	DebugMonitor(AnalogIn* knobPin, EncodedMotor* motorPtr, RawSerial* rawserialPtr, PinName I2C1_SDA = PB_9, PinName I2C1_SDL = PB_8,
-		uint16_t lcdAddr = 0X3F, TextLCD::LCDType lcdtype = TextLCD::LCD20x4);
-	void printSignal(); 
+	DebugMonitor(AnalogIn* knobPin, EncodedMotor* motorPtr, RawSerial* rawSerialPtr, PinName I2C1_SDA = PB_9, PinName I2C1_SDL = PB_8,
+		uint16_t lcdAddr = 0X3F, TextLCD::LCDType lcdtype = TextLCD::LCD20x4, bool resourceEnabled = false);
+	void printSignal();
+	void printResource();
 
 private:
 	// LCD I2C Communication
@@ -29,11 +30,13 @@ private:
 
 	AnalogIn* _knob;
 	EncodedMotor *_motorPtr;
-	RawSerial* _rawserialPtr; 
+	RawSerial* _rawSerialPtr;
 	
 	std::tuple<double, unsigned long long> _speedData; 
 	double _speed = 0.0f;
-	long long _timeDiff = 0; 
+	long long _timeDiff = 0;
+
+	bool _resourceEnabled = false;
 };
 
 
