@@ -42,6 +42,8 @@ SET(SOURCES main.cpp
         source/DebugMonitor.h
         source/DebugMonitor.cpp
         source/EventVariable.h
+        source/Functions.h
+        source/Functions.tpp
         Libraries/TextLCD/TextLCD.h
         Libraries/TextLCD/TextLCD_Config.h
         Libraries/TextLCD/TextLCD_UDC.h
@@ -1143,11 +1145,6 @@ while(ITERCOUNT LESS len)
     MATH(EXPR ITERCOUNT "${ITERCOUNT}+1")
 endwhile()
 
-###
-
-#string(FIND ${FOO} "mounted" BAR1)
-#execute_process(COMMAND ${CMAKE_COMMAND} -E echo ${BAR1})
-#execute_process(COMMAND ${CMAKE_COMMAND} -E echo ${BAR1})
 add_custom_command(TARGET mbed-cli-build-release POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E echo "Copying file to ${mountPath}"
         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/BUILD/NUCLEO_F411RE/GCC_ARM/GDM_Main.bin "${mountPath}"
