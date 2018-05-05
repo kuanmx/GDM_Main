@@ -16,13 +16,10 @@ class PIcontrol;
 class MotorControl {
 public:
 	MotorControl() = delete; 
-	MotorControl(RawSerial* pc, PwmOut* motorEnablePwmPin, DigitalOut* motorDirectionPin1, DigitalOut* motorDirectionPin2, EncodedMotor* encodedMotor,
+	MotorControl(PwmOut* motorEnablePwmPin, DigitalOut* motorDirectionPin1, DigitalOut* motorDirectionPin2, EncodedMotor* encodedMotor,
 		float Kp = 1, float Ki = 0, uint16_t ratedRPM = 24);
 	~MotorControl();
-	enum class Direction {
-		Clockwise,
-		C_Clockwise
-	};
+	enum class Direction {Clockwise = 0, C_Clockwise};
 
 	/** start motor
 	* start motor gradually by factor set in MotorControl.h
@@ -41,8 +38,18 @@ public:
 	*/
 	void stop();
 
-	void setDirection(Direction direction);		
-	void setDirection(bool direction);			// 0: clockwise; 1: counter-clockwise
+	/** Flip direction of motor
+	 * Motor rotating direction will not change immediately
+	 * If pressed twice, the set direction will be flipped twice, hence rotating direction will not change
+	 */
+	void chgDirection();
+
+	/** Get the current direction of motor
+	 * Not necessary the direction set for direction of motor
+	 * (i.e. pending changes)
+	 * @return motorDirection
+	 */
+	Direction getCurrentDirection();
 
     /** Set Motor Output RPM
      * @param ratedRPM
@@ -66,19 +73,19 @@ protected:
 
 private:
 	// define Port
-    RawSerial* _pc;
     PwmOut* _motorEnable;
     DigitalOut* _motorDirectionPin1;
     DigitalOut* _motorDirectionPin2;
 	EncodedMotor* _encodedMotor;
-	PIcontrol* _picontrol = nullptr;
+	PIcontrol* _piControl = nullptr;
 
 	// define Constant
-	unsigned int _ratedRPM = 0;
-	float _speedVolt = 0.0f;		// step up output by 100 for comparison control
-	float _adjErrorVolt = 0.0f;	// step up output by 100 for comparison control
-	float _errorVolt = 0.0f;		// step up output by 100 for comparison control
-	float _compVolt = 0.0f;		// step up output by 100 for comparison control
+	int _ratedRPM = 0;
+	float _speedVolt = 0.0f;	    // step up output by 100 for comparison control
+	float _adjErrorVolt = 0.0f;	    // step up output by 100 for comparison control
+	float _errorVolt = 0.0f;	    // step up output by 100 for comparison control
+	float _compVolt = 0.0f;		    // step up output by 100 for comparison control
+    float _refVolt = 0.0f;          // mapped to -1.0 to 1.0
 	std::tuple<double, unsigned long long> _speedData;
 	float _speed = 0.0f;
 	unsigned long long _thisTime = 0;
@@ -87,9 +94,14 @@ private:
 	const unsigned int factor = 2;  // Volt per 0.1s
 
 	// define function and object
-	void power(float powerIn);
-	bool checkSteady();
-	float refSpeedSmoothing(float input);
+	void power(float powerIn);          // Function to handle motor powering
+	void getSpeedData();                // Function to handle updating current speed data
+	void processInput();                // Function to handle input signal processing
+    void setDirection(Direction direction);     // Private function to change direction of motor directly without safeguard
+	bool checkSteady();                 // Function to check if motor reach steady state
+	float refSpeedSmoothing(float input);   // Function to smoothing signal
+    Direction _motorCurrentDirection;   // Current Direction of Motor
+    Direction _motorSetDirection;       // Direction Set for Motor (i.e. pending changes)
 
 }; 
 #endif // ! MOTORCONTROL_H
