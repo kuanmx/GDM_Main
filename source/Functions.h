@@ -1,8 +1,6 @@
-/*
-template <typename T...>
-void smoothing(T... params){
-
-}*/
+#pragma once
+#ifndef GDM_MAIN_FUNCTIONS_H
+#define GDM_MAIN_FUNCTIONS_H
 
 /**
  * Checks whether a given parameter pack can fit into the same type
@@ -32,3 +30,6 @@ template<typename T, typename ...Args>
 constexpr T filter(Args... args);
 
 #include "Functions.tpp"
+
+
+#endif //GDM_MAIN_FUNCTIONS_H

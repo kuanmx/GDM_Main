@@ -1,6 +1,6 @@
 #pragma once
 
-#ifndef  MOTORCONTROL_H
+#ifndef MOTORCONTROL_H
 #define MOTORCONTROL_H
 
 #include <mbed.h>
