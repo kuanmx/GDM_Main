@@ -2,8 +2,8 @@
 // Created by poh14 on 3/29/2018.
 //
 
-#ifndef MBEDCLI2_SHIFTREG7SEG_H
-#define MBEDCLI2_SHIFTREG7SEG_H
+#ifndef SHIFTREG7SEG_H
+#define SHIFTREG7SEG_H
 
 #include <mbed.h>
 #include <vector>
@@ -52,4 +52,4 @@ private:
 
 };
 
-#endif //MBEDCLI2_SHIFTREG7SEG_H
+#endif //SHIFTREG7SEG_H
