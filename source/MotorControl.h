@@ -95,7 +95,7 @@ private:
 
 	// define function and object
 	void power(float powerIn);          // Function to handle motor powering
-	void getSpeedData();                // Function to handle updating current speed data
+	void updateSpeedData();                // Function to handle updating current speed data
 	void processInput();                // Function to handle input signal processing
     void setDirection(Direction direction);     // Private function to change direction of motor directly without safeguard
 	bool checkSteady();                 // Function to check if motor reach steady state

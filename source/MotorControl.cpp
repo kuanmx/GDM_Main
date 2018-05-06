@@ -18,7 +18,7 @@ MotorControl::~MotorControl() {
 bool MotorControl::run(float refVolt)
 {
     _refVolt = refVolt;
-	getSpeedData();
+    updateSpeedData();
 	processInput();
 
     // run only if latest data (data at new timeStep) is provided
@@ -73,7 +73,7 @@ void MotorControl::chgDirection() {
 
 void MotorControl::power(float powerIn) { _motorEnable->write(powerIn); }
 
-void MotorControl::getSpeedData() {
+void MotorControl::updateSpeedData() {
     _speedData = _encodedMotor->getSpeed();
     _speed = (float)std::get<0>(_speedData);	// get speed in RPM
     _speedVolt = _speed *100 / _ratedRPM;		// map rated RPM to 0 ~ 100
