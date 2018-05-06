@@ -66,8 +66,8 @@ std::vector<uint8_t> ShiftReg7Seg::displayDigits(std::vector<uint8_t>& digitArra
     returnArray.reserve(digitArray.size());
     for (auto iter = std::rbegin(digitArray);iter!=std::rend(digitArray);iter++) {
         _latchPin = 0;
-        _spiPtr->write(*iter);
-        returnArray.push_back(static_cast<uint8_t>(_spiPtr->write(*iter)));
+        auto result = _spiPtr->write(*iter);
+        returnArray.push_back(static_cast<uint8_t>(result));
         _latchPin = 1;
     }
     return returnArray;

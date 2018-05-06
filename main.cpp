@@ -64,7 +64,7 @@ EventFlags interuptRestartFlag;
 //// Define constants
 // volatile bool motorStartBtnChange = false;		// Start motor flag
 volatile bool prevMotorSteady = false;		// Store previous motor steady state
-volatile float currentSpeed;
+//volatile float currentSpeed;
 
 //// Fwd declare
 void I2C_scan();
@@ -171,8 +171,10 @@ void MotorLEDBlinker(bool& motorSteady)			// Run motor and set motorOnLED to bli
 
 }
 void displayCurrentSpeed(){
-	disp1.display(currentSpeed);
-	wait(0.1);
+    while(1){
+        disp1.display(motor1->readSpeed());
+        wait(0.1);
+    }
 }
 void buttonRestartEvent() {motorBtn.enable_irq(); weldingBtn.enable_irq(); buttonRestart.detach(); }
 int main() {
