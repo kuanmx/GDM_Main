@@ -6,6 +6,7 @@
 #include "source/ShiftReg7Seg.h"
 #include "source/MotorControl.h"
 #include "source/EventVariable.h"
+#include "source/MovingAverage.h"
 
 // set baudrate at mbed_config.h default 115200
 // I2C scanner included, derived from Arduino I2C scanner
