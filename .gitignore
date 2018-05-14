@@ -2,3 +2,4 @@
 **/BUILD/
 **/.idea/
 **/cmake-build-debug/
+**/mbed-os/
