@@ -64,5 +64,4 @@ void MovingAverage<T, N>::AddData(T data)
     }
 }
 
-
 #endif //MOVINGAVERAGE_H

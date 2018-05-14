@@ -1,6 +1,9 @@
 #include "MotorControl.h"
 #include "EncodedMotor.h"
 #include "PIcontrol.h"
+#include "MovingAverage.h"
+
+MovingAverage<float, 5> powerSmooth(0);     // declare moving average
 
 MotorControl::MotorControl(PwmOut* motorEnable, DigitalOut* motorDirectionPin1, DigitalOut* motorDirectionPin2, EncodedMotor * encodedMotor,
                            float Kp, float Ki, uint16_t ratedRPM) :
@@ -8,7 +11,6 @@ MotorControl::MotorControl(PwmOut* motorEnable, DigitalOut* motorDirectionPin1, 
 	_piControl(new PIcontrol(Kp, Ki)), _ratedRPM(ratedRPM)
 {
 	stop();     // make sure enable pin is LOW at initialize
-	setDirection(Direction::Clockwise);     // default direction clockwise
 }
 
 MotorControl::~MotorControl() {
@@ -71,7 +73,10 @@ void MotorControl::chgDirection() {
     else if(_motorSetDirection == MotorControl::Direction::C_Clockwise)_motorSetDirection = MotorControl::Direction::Clockwise;
 }
 
-void MotorControl::power(float powerIn) { _motorEnable->write(powerIn); }
+void MotorControl::power(float powerIn) {
+    powerSmooth.AddData(powerIn);                   // Add data to smoothing
+    _motorEnable->write(powerSmooth.getValue());    // Get and write smoothed value
+}
 
 void MotorControl::updateSpeedData() {
     _speedData = _encodedMotor->getSpeed();
@@ -110,7 +115,11 @@ void MotorControl::processInput() {
 
 void MotorControl::setRatedRPM(unsigned int ratedRPM) { _ratedRPM = ratedRPM;}
 
-float MotorControl::readComp() { return _compVolt; }
+void MotorControl::setSteadyCriteria(unsigned int continuousSteadyCriteria) {
+    MotorControl::_continuousSteadyCriteria = continuousSteadyCriteria;
+}
+
+float MotorControl::readComp() { return powerSmooth.getValue(); }
 
 float MotorControl::readSpeed() { return _speedVolt;  }
 
@@ -119,9 +128,13 @@ float MotorControl::readError() { return _errorVolt;  }
 float MotorControl::readAdjError() { return _adjErrorVolt; }
 
 bool MotorControl::checkSteady() {
-	return false;
-}
+    float steadyStateCriteria = 0.01;           // steady state fluctuation within 0.01
 
-float MotorControl::refSpeedSmoothing(float input) {
-    return 0;
+    // increase steady count if fluctuation limit reached... reset if out of range
+    (abs(powerSmooth.getValue() - _prevPower) < steadyStateCriteria) ? steadyCount += 1 : steadyCount = 0;
+
+    _prevPower = powerSmooth.getValue();        // update _prevPower for next use
+
+    if (steadyCount >= _continuousSteadyCriteria) return true;
+    else return false ;
 }

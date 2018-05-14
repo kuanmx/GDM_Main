@@ -41,6 +41,7 @@ public:
 	/** Flip direction of motor
 	 * Motor rotating direction will not change immediately
 	 * If pressed twice, the set direction will be flipped twice, hence rotating direction will not change
+	 * Default direction is clockwise
 	 */
 	void chgDirection();
 
@@ -58,17 +59,17 @@ public:
      */
     void setRatedRPM(unsigned int ratedRPM = 24);
 
-	float readComp(); 
-	float readSpeed(); 
-	float readError();
-	float readAdjError();
+    /** Set continuous steady criteria met (within 0.01 out of 1) to declare motor in steady state
+     * @param continuousSteadyCriteria
+     * default is 5
+     */
+    void setSteadyCriteria(unsigned int continuousSteadyCriteria = 5);
 
-	// Shorthand for MotorControl::run(float powerIn)
-	/*MotorControl & MotorControl::operator=(float powerIn)
-	{
-		run(powerIn);
-		return *this;
-	}*/
+	float readComp();       // return smoothed compensate voltage
+	float readSpeed();      // return speed voltage
+	float readError();      // return error voltage
+	float readAdjError();   // return adjusted error voltage
+
 protected:
 
 private:
@@ -90,18 +91,20 @@ private:
 	float _speed = 0.0f;
 	unsigned long long _thisTime = 0;
 	unsigned long long _prevTime = 0;
+	float _prevPower = 0.0f;		// record previous write power
+	unsigned int steadyCount = 0; 	               // count number of continued steady state
+    unsigned int _continuousSteadyCriteria = 5;    // set continuous steady criteria met before steady state is declared
 
-	const unsigned int factor = 2;  // Volt per 0.1s
+	const unsigned int factor = 2;  	// Volt per 0.1s
 
 	// define function and object
 	void power(float powerIn);          // Function to handle motor powering
-	void updateSpeedData();                // Function to handle updating current speed data
+	void updateSpeedData();             // Function to handle updating current speed data
 	void processInput();                // Function to handle input signal processing
     void setDirection(Direction direction);     // Private function to change direction of motor directly without safeguard
 	bool checkSteady();                 // Function to check if motor reach steady state
-	float refSpeedSmoothing(float input);   // Function to smoothing signal
-    Direction _motorCurrentDirection;   // Current Direction of Motor
-    Direction _motorSetDirection;       // Direction Set for Motor (i.e. pending changes)
+    Direction _motorCurrentDirection = Direction::Clockwise;   // Current Direction of Motor
+    Direction _motorSetDirection = Direction::Clockwise;       // Direction Set for Motor (i.e. pending changes)
 
 }; 
 #endif // ! MOTORCONTROL_H
