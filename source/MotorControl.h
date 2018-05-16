@@ -92,10 +92,20 @@ private:
 	unsigned long long _thisTime = 0;
 	unsigned long long _prevTime = 0;
 	float _prevPower = 0.0f;		// record previous write power
-	unsigned int steadyCount = 0; 	               // count number of continued steady state
-    unsigned int _continuousSteadyCriteria = 5;    // set continuous steady criteria met before steady state is declared
+	unsigned int steadyCount = 0;
+public:
+    unsigned int getSteadyCount() const;
 
-	const unsigned int factor = 2;  	// Volt per 0.1s
+private:
+    // count number of continued steady state
+    unsigned int _continuousSteadyCriteria = 5;    // set continuous steady criteria met before steady state is declared
+    bool _steady = false;
+public:
+    bool is_steady() const;
+
+private:
+
+    const unsigned int factor = 2;  	// Volt per 0.1s
 
 	// define function and object
 	void power(float powerIn);          // Function to handle motor powering

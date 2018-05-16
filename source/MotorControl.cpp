@@ -128,13 +128,21 @@ float MotorControl::readError() { return _errorVolt;  }
 float MotorControl::readAdjError() { return _adjErrorVolt; }
 
 bool MotorControl::checkSteady() {
-    float steadyStateCriteria = 0.01;           // steady state fluctuation within 0.01
+    const float steadyStateCriteria = 0.01;           // steady state fluctuation within 0.01
 
     // increase steady count if fluctuation limit reached... reset if out of range
     (abs(powerSmooth.getValue() - _prevPower) < steadyStateCriteria) ? steadyCount += 1 : steadyCount = 0;
 
     _prevPower = powerSmooth.getValue();        // update _prevPower for next use
 
-    if (steadyCount >= _continuousSteadyCriteria) return true;
-    else return false ;
+    if (steadyCount >= _continuousSteadyCriteria) {_steady = true;return true;}
+    else {_steady = false;return false;}
+}
+
+bool MotorControl::is_steady() const {
+    return _steady;
+}
+
+unsigned int MotorControl::getSteadyCount() const {
+    return steadyCount;
 }

@@ -66,6 +66,7 @@ EventFlags interuptRestartFlag;
 // volatile bool motorStartBtnChange = false;		// Start motor flag
 volatile bool prevMotorSteady = false;		// Store previous motor steady state
 //volatile float currentSpeed;
+float refSpeedFloat;
 
 //// Fwd declare
 void I2C_scan();
@@ -135,9 +136,9 @@ void statusUpdateEvent()
         // Output Flags to Serial monitor
         pc.printf("motorStartBtnChange: %d\n motorSteadySignal: %d\n weldSignal: %d\n SolenoidEnable = %d\n",
                   motorStartBtnChange.value, motorSteadySignal.value, weldSignal.value, SolenoidEnable.read());
-        pc.printf("RefSpeed: %f\n Compensate: %f\n Speed: %f\n Error: %lf\n AdjError: %lf\n Current Direction: %d\n",
-                  refSpeed.read()*100, motor1->readComp(), motor1->readSpeed(), motor1->readError(), motor1->readAdjError(),
-                  motor1->getCurrentDirection());
+        pc.printf("RefSpeed: %f\n Compensate: %f\n Speed: %f\n Error: %lf\n AdjError: %lf\n Current Direction: %d\n", "Steady: %d\n", "Steady Count: %d\n",
+                  refSpeedFloat*100, motor1->readComp(), motor1->readSpeed(), motor1->readError(), motor1->readAdjError(),
+                  motor1->getCurrentDirection(), motor1->is_steady(), motor1->getSteadyCount());
     }
 }
 void motorStartBtnChangeEvent(bool &motorState) {
@@ -156,13 +157,13 @@ void motorStartBtnChangeEvent(bool &motorState) {
 }
 void motorRunner() 
 {
-    bool tempMotorSteady = motor1->run(refSpeed.read());			// run motor1 and read motor1 steady state
+    bool tempMotorSteady = motor1->run(refSpeedFloat);			// run motor1 and read motor1 steady state
 	if (tempMotorSteady != prevMotorSteady) motorSteadySignal = tempMotorSteady;
 	prevMotorSteady = tempMotorSteady;
 }
 void motorStopper()
 {
-	motorSteadySignal = 0; 
+	motorSteadySignal = false;
 	motor1->stop();
 }
 void MotorLEDBlinker(bool& motorSteady)			// Run motor and set motorOnLED to blinking / solid light
@@ -173,7 +174,7 @@ void MotorLEDBlinker(bool& motorSteady)			// Run motor and set motorOnLED to bli
 }
 void displayCurrentSpeed(){
     while(1){
-        disp1.display(motor1->readSpeed());
+        disp1.display(refSpeedFloat * 100);
         wait(0.1);
     }
 }
@@ -202,6 +203,7 @@ int main() {
 	pc.printf("Ready\n");
 
 	while (1) {
+	    refSpeedFloat = refSpeed.read();
 		if (motorStartBtnChange.value) {motorRunner();}
 		else { motorStopper(); }
 	}
