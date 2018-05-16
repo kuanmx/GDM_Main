@@ -2,8 +2,8 @@
 // Created by poh14 on 3/24/2018.
 //
 
-#ifndef MBEDCLI2_ENCODEDMOTOR_H
-#define MBEDCLI2_ENCODEDMOTOR_H
+#ifndef ENCODEDMOTOR_H
+#define ENCODEDMOTOR_H
 
 #include <mbed.h>
 #include <tuple>
@@ -47,4 +47,4 @@ private:
 
 };
 
-#endif //MBEDCLI2_ENCODEDMOTOR_H
+#endif //ENCODEDMOTOR_H

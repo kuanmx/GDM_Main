@@ -2,8 +2,8 @@
 // Created by poh14 on 3/29/2018.
 //
 
-#ifndef MBEDCLI2_SHIFTREG7SEG_H
-#define MBEDCLI2_SHIFTREG7SEG_H
+#ifndef SHIFTREG7SEG_H
+#define SHIFTREG7SEG_H
 
 #include <mbed.h>
 #include <vector>
@@ -42,7 +42,7 @@ public:
     void setNumberOfDP(int _numberOfDP);
 
 private:
-    std::vector<uint8_t> displayDigits(std::vector<uint8_t>& digitArray);
+    std::vector<uint8_t> displayDigits(const std::vector<uint8_t>& digitArray);
     std::unique_ptr<SPI> _spiPtr;
     DigitalOut _latchPin;
     DigitalOut _MRPin;
@@ -52,4 +52,4 @@ private:
 
 };
 
-#endif //MBEDCLI2_SHIFTREG7SEG_H
+#endif //SHIFTREG7SEG_H

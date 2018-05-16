@@ -1,10 +1,11 @@
 #pragma once
 
-#ifndef  MOTORCONTROL_H
+#ifndef MOTORCONTROL_H
 #define MOTORCONTROL_H
 
 #include <mbed.h>
 #include <tuple>
+#include <vector>
 
 class EncodedMotor; 
 class PIcontrol;
@@ -15,13 +16,10 @@ class PIcontrol;
 class MotorControl {
 public:
 	MotorControl() = delete; 
-	MotorControl(RawSerial* pc, PwmOut* motorEnablePwmPin, DigitalOut* motorDirectionPin1, DigitalOut* motorDirectionPin2, EncodedMotor* encodedMotor,
+	MotorControl(PwmOut* motorEnablePwmPin, DigitalOut* motorDirectionPin1, DigitalOut* motorDirectionPin2, EncodedMotor* encodedMotor,
 		float Kp = 1, float Ki = 0, uint16_t ratedRPM = 24);
 	~MotorControl();
-	enum class Direction {
-		Clockwise,
-		C_Clockwise
-	};
+	enum class Direction {Clockwise = 0, C_Clockwise};
 
 	/** start motor
 	* start motor gradually by factor set in MotorControl.h
@@ -38,49 +36,79 @@ public:
 	* default factor is 2V / s (0.02f per 100ms)
 	* cut off at 1V (analogRead 0.1f)
 	*/
-	void stop(); 
-	void setDirection(Direction direction);		
-	void setDirection(bool direction);			// 0: clockwise; 1: counter-clockwise
-	float readComp(); 
-	float readSpeed(); 
-	float readError();
-	float readAdjError();
+	void stop();
 
-	// Shorthand for MotorControl::run(float powerIn)
-	/*MotorControl & MotorControl::operator=(float powerIn)
-	{
-		run(powerIn);
-		return *this;
-	}*/
+	/** Flip direction of motor
+	 * Motor rotating direction will not change immediately
+	 * If pressed twice, the set direction will be flipped twice, hence rotating direction will not change
+	 * Default direction is clockwise
+	 */
+	void chgDirection();
+
+	/** Get the current direction of motor
+	 * Not necessary the direction set for direction of motor
+	 * (i.e. pending changes)
+	 * @return motorDirection
+	 */
+	Direction getCurrentDirection();
+
+    /** Set Motor Output RPM
+     * @param ratedRPM
+     * set motor output shaft rated RPM
+     * default is 24 RPM
+     */
+    void setRatedRPM(unsigned int ratedRPM = 24);
+
+    /** Set continuous steady criteria met (within 0.01 out of 1) to declare motor in steady state
+     * @param continuousSteadyCriteria
+     * default is 5
+     */
+    void setSteadyCriteria(unsigned int continuousSteadyCriteria = 5);
+
+	float readComp();       // return smoothed compensate voltage
+	float readSpeed();      // return speed voltage
+	float readError();      // return error voltage
+	float readAdjError();   // return adjusted error voltage
+    unsigned int getSteadyCount() const;
+
 protected:
 
 private:
 	// define Port
-    RawSerial* _pc;
+    PwmOut* _motorEnable;
+    DigitalOut* _motorDirectionPin1;
+    DigitalOut* _motorDirectionPin2;
 	EncodedMotor* _encodedMotor;
-	PIcontrol* _picontrol = nullptr;
-
-	// define Port
-	PwmOut* _motorEnable;
-	DigitalOut* _motorDirectionPin1;
-	DigitalOut* _motorDirectionPin2;
+	PIcontrol* _piControl = nullptr;
 
 	// define Constant
-	uint16_t _ratedRPM = 0;
-	float _speedVolt = 0.0f;		// step up output by 100 for comparison control
-	float _adjerrorVolt = 0.0f;	// step up output by 100 for comparison control
-	float _errorVolt = 0.0f;		// step up output by 100 for comparison control
-	float _compVolt = 0.0f;		// step up output by 100 for comparison control
+	int _ratedRPM = 0;
+	float _speedVolt = 0.0f;	    // step up output by 100 for comparison control
+	float _adjErrorVolt = 0.0f;	    // step up output by 100 for comparison control
+	float _errorVolt = 0.0f;	    // step up output by 100 for comparison control
+	float _compVolt = 0.0f;		    // step up output by 100 for comparison control
+    float _refVolt = 0.0f;          // mapped to -1.0 to 1.0
 	std::tuple<double, unsigned long long> _speedData;
 	float _speed = 0.0f;
 	unsigned long long _thisTime = 0;
 	unsigned long long _prevTime = 0;
+	float _prevPower = 0.0f;
+	// record previous write power
+	unsigned int steadyCount = 0;
+    // count number of continued steady state
+    unsigned int _continuousSteadyCriteria = 5;    // set continuous steady criteria met before steady state is declared
+    bool _steady = false;
 
-	const unsigned int factor = 2;  // Volt per 0.1s
+    const unsigned int factor = 2;  	// Volt per 0.1s
 
 	// define function and object
-	void power(float powerIn);
-	bool checkSteady(); 
+	void power(float powerIn);          // Function to handle motor powering
+	void updateSpeedData();             // Function to handle updating current speed data
+	void processInput();                // Function to handle input signal processing
+    void setDirection(Direction direction = MotorControl::Direction::Clockwise);     // Private function to change direction of motor directly without safeguard
+	bool checkSteady();                 // Function to check if motor reach steady state
+    Direction _motorCurrentDirection = Direction::Clockwise;   // Current Direction of Motor
+    Direction _motorSetDirection = Direction::Clockwise;       // Direction Set for Motor (i.e. pending changes)
 
 }; 
 #endif // ! MOTORCONTROL_H

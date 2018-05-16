@@ -2,8 +2,8 @@
 // Created by poh14 on 4/15/2018.
 //
 
-#ifndef MBEDCLI2_EVENTVARIABLE_H
-#define MBEDCLI2_EVENTVARIABLE_H
+#ifndef EVENTVARIABLE_H
+#define EVENTVARIABLE_H
 #include <mbed.h>
 template<typename T>
 class EventVariable {
@@ -113,4 +113,4 @@ bool EventVariable<bool>::operator!()
     return !value;
 }
 
-#endif //MBEDCLI2_EVENTVARIABLE_H
+#endif //EVENTVARIABLE_H

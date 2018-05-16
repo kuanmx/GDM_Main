@@ -65,6 +65,6 @@ void EncodedMotor::Stop()
 }
 std::tuple<double, unsigned long long> EncodedMotor::getSpeed() const
 {
-    unsigned long long timeDiff_us = _previousSaveTime - _previousReadTime;
-    return std::make_tuple(_speed, timeDiff_us);
+//    unsigned long long timeDiff_us = _previousSaveTime - _previousReadTime;
+    return std::make_tuple(_speed, _previousSaveTime);
 }

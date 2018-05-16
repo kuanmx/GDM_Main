@@ -23,7 +23,7 @@ unsigned int ShiftReg7Seg::getNumberOfDisplay() const
 {
     return _numberOfDisplay;
 }
-void ShiftReg7Seg::setNumberOfDisplay(unsigned int _numberOfDisplay)
+void ShiftReg7Seg::setNumberOfDisplay(const unsigned int _numberOfDisplay)
 {
     ShiftReg7Seg::_numberOfDisplay = _numberOfDisplay;
 }
@@ -35,7 +35,7 @@ void ShiftReg7Seg::setNumberOfDP(int _numberOfDP)
 {
     ShiftReg7Seg::_numberOfDP = _numberOfDP;
 }
-std::vector<uint8_t> ShiftReg7Seg::display(double value)
+std::vector<uint8_t> ShiftReg7Seg::display(const double value)
 {
     double logVal = log10(value);
     logVal>=0 ? logVal : logVal = 0;
@@ -60,14 +60,14 @@ std::vector<uint8_t> ShiftReg7Seg::display(double value)
     }
 }
 
-std::vector<uint8_t> ShiftReg7Seg::displayDigits(std::vector<uint8_t>& digitArray)
+std::vector<uint8_t> ShiftReg7Seg::displayDigits(const std::vector<uint8_t>& digitArray)
 {
     std::vector<uint8_t> returnArray;
     returnArray.reserve(digitArray.size());
     for (auto iter = std::rbegin(digitArray);iter!=std::rend(digitArray);iter++) {
         _latchPin = 0;
-        _spiPtr->write(*iter);
-        returnArray.push_back(static_cast<uint8_t>(_spiPtr->write(*iter)));
+        auto result = _spiPtr->write(*iter);
+        returnArray.push_back(static_cast<uint8_t>(result));
         _latchPin = 1;
     }
     return returnArray;
