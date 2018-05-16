@@ -41,7 +41,7 @@ DigitalOut MotorDirectionPin2(MotorDirection2);
 RawSerial pc(SERIAL_TX, SERIAL_RX, 115200);		                // serial communication protocol
 EncodedMotor encoder(MotorEncoderA, MotorEncoderB, 1848*4, 10, EncodeType::X4);		// Encoded Motor object
 std::unique_ptr<MotorControl> motor1 = std::make_unique<MotorControl>
-        (&MotorEnablePin, &MotorDirectionPin1, &MotorDirectionPin2, &encoder, 0.16, 0.01);		// motor controller object, Kp and Ki specified
+        (&MotorEnablePin, &MotorDirectionPin1, &MotorDirectionPin2, &encoder, 0.10, 0.005);		// motor controller object, Kp and Ki specified
 DebugMonitor debugger(&refSpeed, &encoder, &pc);		        // update status through LCD2004 and Serial Monitor
 ShiftReg7Seg disp1(SPI_MOSI, SPI_MISO, SPI_SCK, SPI_CS, 4, D9); // 7 segments display
 
@@ -136,9 +136,10 @@ void statusUpdateEvent()
         // Output Flags to Serial monitor
         pc.printf("motorStartBtnChange: %d\n motorSteadySignal: %d\n weldSignal: %d\n SolenoidEnable = %d\n",
                   motorStartBtnChange.value, motorSteadySignal.value, weldSignal.value, SolenoidEnable.read());
-        pc.printf("RefSpeed: %f\n Compensate: %f\n Speed: %f\n Error: %lf\n AdjError: %lf\n Current Direction: %d\n", "Steady: %d\n", "Steady Count: %d\n",
+        pc.printf("RefSpeed: %f\n Compensate: %f\n Speed: %f\n Error: %lf\n AdjError: %lf\n Current Direction: %d\n",
                   refSpeedFloat*100, motor1->readComp(), motor1->readSpeed(), motor1->readError(), motor1->readAdjError(),
-                  motor1->getCurrentDirection(), motor1->is_steady(), motor1->getSteadyCount());
+                  motor1->getCurrentDirection());
+        pc.printf( "Steady Count: %d\n",  motor1->getSteadyCount());
     }
 }
 void motorStartBtnChangeEvent(bool &motorState) {

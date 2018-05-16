@@ -60,7 +60,7 @@ std::vector<uint8_t> ShiftReg7Seg::display(const double value)
     }
 }
 
-std::vector<uint8_t> ShiftReg7Seg::displayDigits(std::vector<uint8_t>& digitArray)
+std::vector<uint8_t> ShiftReg7Seg::displayDigits(const std::vector<uint8_t>& digitArray)
 {
     std::vector<uint8_t> returnArray;
     returnArray.reserve(digitArray.size());

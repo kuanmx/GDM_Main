@@ -3,7 +3,7 @@
 #include "PIcontrol.h"
 #include "MovingAverage.h"
 
-MovingAverage<float, 5> powerSmooth(0);     // declare moving average
+MovingAverage<float, 11> refSmoothing;
 
 MotorControl::MotorControl(PwmOut* motorEnable, DigitalOut* motorDirectionPin1, DigitalOut* motorDirectionPin2, EncodedMotor * encodedMotor,
                            float Kp, float Ki, uint16_t ratedRPM) :
@@ -11,6 +11,7 @@ MotorControl::MotorControl(PwmOut* motorEnable, DigitalOut* motorDirectionPin1, 
 	_piControl(new PIcontrol(Kp, Ki)), _ratedRPM(ratedRPM)
 {
 	stop();     // make sure enable pin is LOW at initialize
+    setDirection();
 }
 
 MotorControl::~MotorControl() {
@@ -19,10 +20,11 @@ MotorControl::~MotorControl() {
 
 bool MotorControl::run(float refVolt)
 {
-    _refVolt = refVolt;
+    refSmoothing.AddData(refVolt);
+    _refVolt = refSmoothing.getValue();
     updateSpeedData();
 	processInput();
-
+    bool isSteady = false;
     // run only if latest data (data at new timeStep) is provided
 	if (_thisTime > _prevTime)
 	{
@@ -35,9 +37,10 @@ bool MotorControl::run(float refVolt)
 
 		power(_compVolt/100);		// output to Motor
 		_prevTime = _thisTime;		// update TimeStep
+        isSteady = checkSteady();
 	}
 
-	return checkSteady();
+	return isSteady;
 }
 
 void MotorControl::stop()
@@ -56,7 +59,7 @@ void MotorControl::stop()
 	}*/
 }
 
-void MotorControl::setDirection(MotorControl::Direction direction = MotorControl::Direction::Clockwise)
+void MotorControl::setDirection(MotorControl::Direction direction)
 {
 	if (direction == MotorControl::Direction::Clockwise) { _motorDirectionPin1->write(0);  _motorDirectionPin2->write(1); }
 	else { _motorDirectionPin1->write(1); _motorDirectionPin2->write(0); }
@@ -74,8 +77,8 @@ void MotorControl::chgDirection() {
 }
 
 void MotorControl::power(float powerIn) {
-    powerSmooth.AddData(powerIn);                   // Add data to smoothing
-    _motorEnable->write(powerSmooth.getValue());    // Get and write smoothed value
+//    powerSmooth.AddData(powerIn);                   // Add data to smoothing
+    _motorEnable->write(powerIn);    // Get and write smoothed value
 }
 
 void MotorControl::updateSpeedData() {
@@ -119,7 +122,7 @@ void MotorControl::setSteadyCriteria(unsigned int continuousSteadyCriteria) {
     MotorControl::_continuousSteadyCriteria = continuousSteadyCriteria;
 }
 
-float MotorControl::readComp() { return powerSmooth.getValue(); }
+float MotorControl::readComp() { return _compVolt; }
 
 float MotorControl::readSpeed() { return _speedVolt;  }
 
@@ -128,21 +131,20 @@ float MotorControl::readError() { return _errorVolt;  }
 float MotorControl::readAdjError() { return _adjErrorVolt; }
 
 bool MotorControl::checkSteady() {
-    const float steadyStateCriteria = 0.01;           // steady state fluctuation within 0.01
+    const float steadyStateCriteria = 0.06;           // steady state fluctuation within 0.001
 
     // increase steady count if fluctuation limit reached... reset if out of range
-    (abs(powerSmooth.getValue() - _prevPower) < steadyStateCriteria) ? steadyCount += 1 : steadyCount = 0;
+//    (abs(powerSmooth.getValue() - _prevPower) < steadyStateCriteria) ? steadyCount += 1 : steadyCount = 0;
+    (abs(_compVolt - _prevPower) < steadyStateCriteria) ? steadyCount += 1 : steadyCount = 0;
 
-    _prevPower = powerSmooth.getValue();        // update _prevPower for next use
+
+    _prevPower = _compVolt;        // update _prevPower for next use
 
     if (steadyCount >= _continuousSteadyCriteria) {_steady = true;return true;}
     else {_steady = false;return false;}
 }
 
-bool MotorControl::is_steady() const {
-    return _steady;
-}
-
 unsigned int MotorControl::getSteadyCount() const {
     return steadyCount;
 }
+

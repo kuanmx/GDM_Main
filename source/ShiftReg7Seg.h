@@ -42,7 +42,7 @@ public:
     void setNumberOfDP(int _numberOfDP);
 
 private:
-    std::vector<uint8_t> displayDigits(std::vector<uint8_t>& digitArray);
+    std::vector<uint8_t> displayDigits(const std::vector<uint8_t>& digitArray);
     std::unique_ptr<SPI> _spiPtr;
     DigitalOut _latchPin;
     DigitalOut _MRPin;
