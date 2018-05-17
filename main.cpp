@@ -39,10 +39,10 @@ DigitalOut MotorDirectionPin2(MotorDirection2);
 
 //// Initiate object
 RawSerial pc(SERIAL_TX, SERIAL_RX, 115200);		                // serial communication protocol
-EncodedMotor encoder(MotorEncoderA, MotorEncoderB, 1848*4, 10, EncodeType::X4);		// Encoded Motor object
+std::shared_ptr<EncodedMotor> encoder = std::make_shared<EncodedMotor>(MotorEncoderA, MotorEncoderB, 1848*4, 10, EncodeType::X4);		// Encoded Motor object
 std::unique_ptr<MotorControl> motor1 = std::make_unique<MotorControl>
-        (&MotorEnablePin, &MotorDirectionPin1, &MotorDirectionPin2, &encoder, 0.10, 0.005);		// motor controller object, Kp and Ki specified
-DebugMonitor debugger(&refSpeed, &encoder, &pc);		        // update status through LCD2004 and Serial Monitor
+        (MotorEnable, MotorDirection1, MotorDirection2, encoder, 0.10, 0.005);		// motor controller object, Kp and Ki specified
+DebugMonitor debugger(&refSpeed, encoder, &pc);		        // update status through LCD2004 and Serial Monitor
 ShiftReg7Seg disp1(SPI_MOSI, SPI_MISO, SPI_SCK, SPI_CS, 4, D9); // 7 segments display
 
 //// Declare interrupt

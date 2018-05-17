@@ -5,18 +5,18 @@
 
 MovingAverage<float, 11> refSmoothing;
 
-MotorControl::MotorControl(PwmOut* motorEnable, DigitalOut* motorDirectionPin1, DigitalOut* motorDirectionPin2, EncodedMotor * encodedMotor,
-                           float Kp, float Ki, uint16_t ratedRPM) :
+MotorControl::MotorControl(PinName motorEnable, PinName motorDirectionPin1, PinName motorDirectionPin2,
+                           std::shared_ptr<EncodedMotor>& encodedMotor,
+                           float Kp, float Ki, unsigned int ratedRPM) :
 	_motorEnable(motorEnable), _motorDirectionPin1(motorDirectionPin1), _motorDirectionPin2(motorDirectionPin2), _encodedMotor(encodedMotor),
-	_piControl(new PIcontrol(Kp, Ki)), _ratedRPM(ratedRPM)
+	_piControl(std::make_unique<PIcontrol>(Kp, Ki)), _ratedRPM(ratedRPM)
 {
 	stop();     // make sure enable pin is LOW at initialize
     setDirection();
 }
 
-MotorControl::~MotorControl() {
-	delete _piControl;
-}
+
+MotorControl::~MotorControl() = default;
 
 bool MotorControl::run(float refVolt)
 {
@@ -35,7 +35,9 @@ bool MotorControl::run(float refVolt)
         if(_compVolt > 100 ){_compVolt = 100.0f;}           // set range of _compVolt to 0.0 - 100.0
         else if (_compVolt < 0.0f) {_compVolt = 0.0f;}
 
-		power(_compVolt/100);		// output to Motor
+
+        _motorEnable.write(_compVolt/100);    // output to Motor
+
 		_prevTime = _thisTime;		// update TimeStep
         isSteady = checkSteady();
 	}
@@ -61,8 +63,8 @@ void MotorControl::stop()
 
 void MotorControl::setDirection(MotorControl::Direction direction)
 {
-	if (direction == MotorControl::Direction::Clockwise) { _motorDirectionPin1->write(0);  _motorDirectionPin2->write(1); }
-	else { _motorDirectionPin1->write(1); _motorDirectionPin2->write(0); }
+	if (direction == MotorControl::Direction::Clockwise) { _motorDirectionPin1.write(0);  _motorDirectionPin2.write(1); }
+	else { _motorDirectionPin1.write(1); _motorDirectionPin2.write(0); }
     _motorSetDirection = direction;
 	// the _motorCurrentDirection hence the actual motor rotation direction
     // will be changed at MotorControl::processInput() during operation
@@ -74,11 +76,6 @@ void MotorControl::chgDirection() {
     // flip motor set direction
     if(_motorSetDirection == MotorControl::Direction::Clockwise) _motorSetDirection = MotorControl::Direction::C_Clockwise;
     else if(_motorSetDirection == MotorControl::Direction::C_Clockwise)_motorSetDirection = MotorControl::Direction::Clockwise;
-}
-
-void MotorControl::power(float powerIn) {
-//    powerSmooth.AddData(powerIn);                   // Add data to smoothing
-    _motorEnable->write(powerIn);    // Get and write smoothed value
 }
 
 void MotorControl::updateSpeedData() {
@@ -140,11 +137,12 @@ bool MotorControl::checkSteady() {
 
     _prevPower = _compVolt;        // update _prevPower for next use
 
-    if (steadyCount >= _continuousSteadyCriteria) {_steady = true;return true;}
-    else {_steady = false;return false;}
+    if (steadyCount >= _continuousSteadyCriteria) return true;
+    else return false;
 }
 
 unsigned int MotorControl::getSteadyCount() const {
     return steadyCount;
 }
+
 

@@ -6,6 +6,7 @@
 #include <mbed.h>
 #include <TextLCD.h>		// configure LCD at TextLCD_Config.h
 #include <tuple>
+#include <memory>
 
 class EncodedMotor; 
 
@@ -18,8 +19,9 @@ class EncodedMotor;
  */
 class DebugMonitor {
 public:
-	DebugMonitor(AnalogIn* knobPin, EncodedMotor* motorPtr, RawSerial* rawSerialPtr, PinName I2C1_SDA = PB_9, PinName I2C1_SDL = PB_8,
+	DebugMonitor(AnalogIn* knobPin, std::shared_ptr<EncodedMotor>& motorPtr, RawSerial* rawSerialPtr, PinName I2C1_SDA = PB_9, PinName I2C1_SDL = PB_8,
 		uint16_t lcdAddr = 0X3F, TextLCD::LCDType lcdtype = TextLCD::LCD20x4, bool resourceEnabled = false);
+	~DebugMonitor();
 	void printSignal();
 	void printResource();
 
@@ -29,7 +31,7 @@ private:
 	TextLCD_I2C lcd; 
 
 	AnalogIn* _knob;
-	EncodedMotor *_motorPtr;
+	std::shared_ptr<EncodedMotor> _motorPtr;
 	RawSerial* _rawSerialPtr;
 	
 	std::tuple<double, unsigned long long> _speedData; 

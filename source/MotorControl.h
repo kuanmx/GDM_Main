@@ -5,7 +5,7 @@
 
 #include <mbed.h>
 #include <tuple>
-#include <vector>
+#include <memory>
 
 class EncodedMotor; 
 class PIcontrol;
@@ -15,9 +15,10 @@ class PIcontrol;
 */
 class MotorControl {
 public:
-	MotorControl() = delete; 
-	MotorControl(PwmOut* motorEnablePwmPin, DigitalOut* motorDirectionPin1, DigitalOut* motorDirectionPin2, EncodedMotor* encodedMotor,
-		float Kp = 1, float Ki = 0, uint16_t ratedRPM = 24);
+	MotorControl() = delete;
+	MotorControl(PinName motorEnablePwmPin, PinName motorDirectionPin1, PinName motorDirectionPin2,
+                 std::shared_ptr<EncodedMotor>& encodedMotor,
+                 float Kp = 1, float Ki = 0, unsigned int ratedRPM = 24);
 	~MotorControl();
 	enum class Direction {Clockwise = 0, C_Clockwise};
 
@@ -75,14 +76,14 @@ protected:
 
 private:
 	// define Port
-    PwmOut* _motorEnable;
-    DigitalOut* _motorDirectionPin1;
-    DigitalOut* _motorDirectionPin2;
-	EncodedMotor* _encodedMotor;
-	PIcontrol* _piControl = nullptr;
+    PwmOut _motorEnable;
+    DigitalOut _motorDirectionPin1;
+    DigitalOut _motorDirectionPin2;
+	std::shared_ptr<EncodedMotor> _encodedMotor;
+	std::unique_ptr<PIcontrol> _piControl;
 
 	// define Constant
-	int _ratedRPM = 0;
+	unsigned int _ratedRPM = 0;
 	float _speedVolt = 0.0f;	    // step up output by 100 for comparison control
 	float _adjErrorVolt = 0.0f;	    // step up output by 100 for comparison control
 	float _errorVolt = 0.0f;	    // step up output by 100 for comparison control
@@ -97,12 +98,10 @@ private:
 	unsigned int steadyCount = 0;
     // count number of continued steady state
     unsigned int _continuousSteadyCriteria = 5;    // set continuous steady criteria met before steady state is declared
-    bool _steady = false;
 
     const unsigned int factor = 2;  	// Volt per 0.1s
 
 	// define function and object
-	void power(float powerIn);          // Function to handle motor powering
 	void updateSpeedData();             // Function to handle updating current speed data
 	void processInput();                // Function to handle input signal processing
     void setDirection(Direction direction = MotorControl::Direction::Clockwise);     // Private function to change direction of motor directly without safeguard

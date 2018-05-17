@@ -3,7 +3,7 @@
 #include "mbed_stats.h" // resource monitor for heap
 #include "cmsis_os.h"   // resource monitor for stack
 
-DebugMonitor::DebugMonitor(AnalogIn* knobPin, EncodedMotor* motorPtr, RawSerial* rawSerialPtr,
+DebugMonitor::DebugMonitor(AnalogIn* knobPin, std::shared_ptr<EncodedMotor>& motorPtr, RawSerial* rawSerialPtr,
                            PinName I2C1_SDA, PinName I2C1_SDL, uint16_t lcdAddr, TextLCD::LCDType lcdtype, bool resourceEnabled) :
 	i2c(I2C1_SDA, I2C1_SDL), lcd(&i2c, lcdAddr << 1, lcdtype),
 	_knob(knobPin), _motorPtr(motorPtr), _rawSerialPtr(rawSerialPtr) , _resourceEnabled(resourceEnabled)
@@ -23,6 +23,8 @@ DebugMonitor::DebugMonitor(AnalogIn* knobPin, EncodedMotor* motorPtr, RawSerial*
         osThreadId main_id = osThreadGetId();
     }
 }
+
+DebugMonitor::~DebugMonitor() = default;
 
 void DebugMonitor::printSignal() {
 	_speedData = _motorPtr->getSpeed();
