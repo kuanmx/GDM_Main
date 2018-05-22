@@ -6,8 +6,8 @@
 MovingAverage<float, 11> refSmoothing;
 
 MotorControl::MotorControl(PinName motorEnable, PinName motorDirectionPin1, PinName motorDirectionPin2,
-                           std::shared_ptr<EncodedMotor>& encodedMotor,
-                           float Kp, float Ki, unsigned int ratedRPM) :
+                           std::shared_ptr<EncodedMotor> &encodedMotor,
+                           float Kp, float Ki, float ratedRPM) :
 	_motorEnable(motorEnable), _motorDirectionPin1(motorDirectionPin1), _motorDirectionPin2(motorDirectionPin2), _encodedMotor(encodedMotor),
 	_piControl(std::make_unique<PIcontrol>(Kp, Ki)), _ratedRPM(ratedRPM)
 {
@@ -18,10 +18,8 @@ MotorControl::MotorControl(PinName motorEnable, PinName motorDirectionPin1, PinN
 
 MotorControl::~MotorControl() = default;
 
-bool MotorControl::run(float refVolt)
+bool MotorControl::run()
 {
-    refSmoothing.AddData(refVolt);
-    _refVolt = refSmoothing.getValue();
     updateSpeedData();
 	processInput();
     bool isSteady = false;
@@ -47,7 +45,8 @@ bool MotorControl::run(float refVolt)
 
 void MotorControl::stop()
 {
-    run(0.0f);
+    _refVolt = 0;
+    run();
 /*	_speedData = _encodedMotor->getSpeed();
 	_speed = std::get<0>(_speedData);			// get speed in RPM
 	_speedVolt = _speed * 100 / _ratedRPM;		// map rated RPM to 0 ~ 100
@@ -68,6 +67,10 @@ void MotorControl::setDirection(MotorControl::Direction direction)
     _motorSetDirection = direction;
 	// the _motorCurrentDirection hence the actual motor rotation direction
     // will be changed at MotorControl::processInput() during operation
+}
+
+void MotorControl::setRefVolt(float refVolt) {
+    MotorControl::_refVolt = refVolt;
 }
 
 MotorControl::Direction MotorControl::getCurrentDirection() { return _motorCurrentDirection; }
@@ -91,7 +94,6 @@ void MotorControl::processInput() {
      * Only change motor direction when _compVolt = 0 (i.e. at full stop)
      * If _setMotorDirection changed during operation, stop the motor (i.e. set refVolt = 0)
      */
-    // if (_compVolt == 0) { refVolt > 0 ? setDirection(Direction::Clockwise) : setDirection(Direction::C_Clockwise); }
     if (_motorCurrentDirection != _motorSetDirection){
         if (_compVolt == 0) {
             _motorCurrentDirection = _motorSetDirection;
@@ -107,13 +109,13 @@ void MotorControl::processInput() {
     */
     _errorVolt = _refVolt * 100 - _speedVolt;
 
-    if (_errorVolt > 5) _adjErrorVolt = 5;
-    else if (_errorVolt < -5) _adjErrorVolt = -5;
-    else if (_errorVolt < 0.4 && _errorVolt > -0.4) _adjErrorVolt = 0;
+    if (_errorVolt > 2) _adjErrorVolt = 2;
+    else if (_errorVolt < -2) _adjErrorVolt = -2;
+    else if (_errorVolt < 0.1 && _errorVolt > -0.1) _adjErrorVolt = 0;
     else _adjErrorVolt = _errorVolt;
 }
 
-void MotorControl::setRatedRPM(unsigned int ratedRPM) { _ratedRPM = ratedRPM;}
+void MotorControl::setRatedRPM(float ratedRPM) { _ratedRPM = ratedRPM;}
 
 void MotorControl::setSteadyCriteria(unsigned int continuousSteadyCriteria) {
     MotorControl::_continuousSteadyCriteria = continuousSteadyCriteria;
@@ -127,8 +129,11 @@ float MotorControl::readError() { return _errorVolt;  }
 
 float MotorControl::readAdjError() { return _adjErrorVolt; }
 
+float MotorControl::readRefRPM() const {
+    return _refVolt*_ratedRPM;
+}
 bool MotorControl::checkSteady() {
-    const float steadyStateCriteria = 0.06;           // steady state fluctuation within 0.001
+    const float steadyStateCriteria = 0.01;           // steady state fluctuation within 0.001
 
     // increase steady count if fluctuation limit reached... reset if out of range
 //    (abs(powerSmooth.getValue() - _prevPower) < steadyStateCriteria) ? steadyCount += 1 : steadyCount = 0;
@@ -137,7 +142,7 @@ bool MotorControl::checkSteady() {
 
     _prevPower = _compVolt;        // update _prevPower for next use
 
-    if (steadyCount >= _continuousSteadyCriteria) return true;
+    if (steadyCount >= _continuousSteadyCriteria && _compVolt<99.99) return true;
     else return false;
 }
 

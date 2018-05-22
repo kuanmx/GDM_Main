@@ -17,8 +17,8 @@ class MotorControl {
 public:
 	MotorControl() = delete;
 	MotorControl(PinName motorEnablePwmPin, PinName motorDirectionPin1, PinName motorDirectionPin2,
-                 std::shared_ptr<EncodedMotor>& encodedMotor,
-                 float Kp = 1, float Ki = 0, unsigned int ratedRPM = 24);
+                 std::shared_ptr<EncodedMotor> &encodedMotor,
+                 float Kp = 1, float Ki = 0, float ratedRPM = 24);
 	~MotorControl();
 	enum class Direction {Clockwise = 0, C_Clockwise};
 
@@ -30,7 +30,7 @@ public:
 	* input reference power for power (MotorControl will adjust motor to actual power)
 	* return true if in steady
 	*/
-	bool run(float refPower);
+    bool run();
 	
 	/** Stop motor
 	* slow down motor gradually by factor set in MotorControl.h
@@ -58,18 +58,20 @@ public:
      * set motor output shaft rated RPM
      * default is 24 RPM
      */
-    void setRatedRPM(unsigned int ratedRPM = 24);
+    void setRatedRPM(float ratedRPM = 24);
 
     /** Set continuous steady criteria met (within 0.01 out of 1) to declare motor in steady state
      * @param continuousSteadyCriteria
      * default is 5
      */
     void setSteadyCriteria(unsigned int continuousSteadyCriteria = 5);
+    void setRefVolt(float _refVolt);
 
-	float readComp();       // return smoothed compensate voltage
+	float readComp();       // return compensate voltage
 	float readSpeed();      // return speed voltage
 	float readError();      // return error voltage
 	float readAdjError();   // return adjusted error voltage
+    float readRefRPM() const;
     unsigned int getSteadyCount() const;
 
 protected:
@@ -83,7 +85,7 @@ private:
 	std::unique_ptr<PIcontrol> _piControl;
 
 	// define Constant
-	unsigned int _ratedRPM = 0;
+	float _ratedRPM = 0;
 	float _speedVolt = 0.0f;	    // step up output by 100 for comparison control
 	float _adjErrorVolt = 0.0f;	    // step up output by 100 for comparison control
 	float _errorVolt = 0.0f;	    // step up output by 100 for comparison control
