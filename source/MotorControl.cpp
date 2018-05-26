@@ -1,15 +1,15 @@
 #include "MotorControl.h"
 #include "EncodedMotor.h"
-#include "PIcontrol.h"
+#include "PIDcontrol.h"
 #include "MovingAverage.h"
 
 MovingAverage<float, 11> refSmoothing;
 
 MotorControl::MotorControl(PinName motorEnable, PinName motorDirectionPin1, PinName motorDirectionPin2,
                            std::shared_ptr<EncodedMotor> &encodedMotor,
-                           float Kp, float Ki, float ratedRPM) :
+                           float Kp, float Ki, float Kd, float ratedRPM) :
 	_motorEnable(motorEnable), _motorDirectionPin1(motorDirectionPin1), _motorDirectionPin2(motorDirectionPin2), _encodedMotor(encodedMotor),
-	_piControl(std::make_unique<PIcontrol>(Kp, Ki)), _ratedRPM(ratedRPM)
+	_piControl(std::make_unique<PIDcontrol>(Kp, Ki, Kd)), _ratedRPM(ratedRPM)
 {
 	stop();     // make sure enable pin is LOW at initialize
     setDirection();
