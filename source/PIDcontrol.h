@@ -5,15 +5,16 @@
 
 class EncodedMotor; 
 
-class PIDControl {
+class PIDcontrol {
 public:
-	PIDControl() = delete;
-	PIDControl(float Kp, float Ki, float Kd);
-	float compensateSignal(float error, unsigned long long int timestep);
+	PIDcontrol() = delete;
+	PIDcontrol(float Kp, float Ki, float Kd);
+	float compensateSignal(float error, unsigned long long int timeStep);
 
 protected: 
 	float P_signal();
 	float I_signal();
+	float D_signal();
 
 private:
 	float _Kp = 0.0f; 
@@ -22,8 +23,8 @@ private:
 
 	float _thisError = 0.0f;
 	float _prevError = 0.0f;
-	float _accError = 0.0f;
-	unsigned long long _timestep = 0;
+	float _accError_t = 0.0f; 
+	unsigned long long _timeStep = 0;
 	float _compensateError = 0.0f; 
 
 };

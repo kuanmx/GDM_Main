@@ -8,7 +8,7 @@
 #include <memory>
 
 class EncodedMotor; 
-class PIDControl;
+class PIDcontrol;
 
 /** Motor Controller with PI Control
 * run(*) and stop() method must be placed in continuous loop
@@ -17,7 +17,8 @@ class MotorControl {
 public:
 	MotorControl() = delete;
 	MotorControl(PinName motorEnablePwmPin, PinName motorDirectionPin1, PinName motorDirectionPin2,
-					 std::shared_ptr<EncodedMotor> &encodedMotor, float Kp=0, float Ki=0, float Kd=0, float ratedRPM=24/50);
+                 std::shared_ptr<EncodedMotor> &encodedMotor,
+                 float Kp = 1, float Ki = 0, float Kd = 0, float ratedRPM = 24);
 	~MotorControl();
 	enum class Direction {Clockwise = 0, C_Clockwise};
 
@@ -81,7 +82,7 @@ private:
     DigitalOut _motorDirectionPin1;
     DigitalOut _motorDirectionPin2;
 	std::shared_ptr<EncodedMotor> _encodedMotor;
-	std::unique_ptr<PIDControl> _piControl;
+	std::unique_ptr<PIDcontrol> _piControl;
 
 	// define Constant
 	float _ratedRPM = 0;

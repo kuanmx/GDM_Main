@@ -7,11 +7,17 @@
 #include "source/MotorControl.h"
 #include "source/EventVariable.h"
 #include "source/MovingAverage.h"
-#include "source/PIDParameter.h"
 
 // set baudrate at mbed_config.h default 115200
 // I2C scanner included, derived from Arduino I2C scanner
 // http://www.gammon.com.au/forum/?id=10896
+//// Define constants
+// volatile bool motorStartBtnChange = false;		// Start motor flag
+volatile bool prevMotorSteady = false;		// Store previous motor steady state
+//volatile float currentSpeed;
+float refSpeedFloat;
+const float motor1RPM = 24.0f/50.0f;
+
 /////////////////////////////////
 //// Declare connection//////////
 /////////////////////////////////
@@ -41,11 +47,9 @@ DigitalOut MotorDirectionPin2(MotorDirection2);
 //// Initiate object
 RawSerial pc(SERIAL_TX, SERIAL_RX, 115200);		                // serial communication protocol
 std::shared_ptr<EncodedMotor> encoder = std::make_shared<EncodedMotor>(MotorEncoderA, MotorEncoderB, 1848*4*50, 10, EncodeType::X4);		// Encoded Motor object
-const float motor1RPM = 24.0f/50.0f;
-
 std::unique_ptr<MotorControl> motor1 = std::make_unique<MotorControl>
-        (MotorEnable, MotorDirection1, MotorDirection2, encoder, 0.01, 0.001, 0.1, motor1RPM);		// motor controller object, Kp and Ki specified
-DebugMonitor debugger(&refSpeed, encoder, &pc);		        // update status through LCD2004 and Serial Monitor
+        (MotorEnable, MotorDirection1, MotorDirection2, encoder, 0.01, 0.001, 0, motor1RPM);		// motor controller object, Kp, Ki, Kd specified
+DebugMonitor debugger(&refSpeed, encoder, &pc);		        	// update status through LCD2004 and Serial Monitor
 ShiftReg7Seg disp1(SPI_MOSI, SPI_MISO, SPI_SCK, SPI_CS, 4, D9); // 7 segments display
 
 //// Declare interrupt
@@ -65,12 +69,6 @@ Thread dispThread;              // Thread to display 7 segments display
 //// Declare event flag
 EventFlags statusUpdateFlag;
 EventFlags interuptRestartFlag;
-
-//// Define constants
-// volatile bool motorStartBtnChange = false;		// Start motor flag
-volatile bool prevMotorSteady = false;		// Store previous motor steady state
-//volatile float currentSpeed;
-float refSpeedFloat;
 
 //// Fwd declare
 void I2C_scan();
