@@ -35,8 +35,8 @@ SET(SOURCES main.cpp
         source/EncodedMotor.cpp
         source/ShiftReg7Seg.h
         source/ShiftReg7Seg.cpp
-        source/PIcontrol.h
-        source/PIcontrol.cpp
+        source/PIDControl.h
+        source/PIDControl.cpp
         source/MotorControl.h
         source/MotorControl.cpp
         source/DebugMonitor.h

@@ -7,6 +7,7 @@
 #include "source/MotorControl.h"
 #include "source/EventVariable.h"
 #include "source/MovingAverage.h"
+#include "source/PIDParameter.h"
 
 // set baudrate at mbed_config.h default 115200
 // I2C scanner included, derived from Arduino I2C scanner
@@ -41,8 +42,9 @@ DigitalOut MotorDirectionPin2(MotorDirection2);
 RawSerial pc(SERIAL_TX, SERIAL_RX, 115200);		                // serial communication protocol
 std::shared_ptr<EncodedMotor> encoder = std::make_shared<EncodedMotor>(MotorEncoderA, MotorEncoderB, 1848*4*50, 10, EncodeType::X4);		// Encoded Motor object
 const float motor1RPM = 24.0f/50.0f;
+
 std::unique_ptr<MotorControl> motor1 = std::make_unique<MotorControl>
-        (MotorEnable, MotorDirection1, MotorDirection2, encoder, 0.01, 0.001, motor1RPM);		// motor controller object, Kp and Ki specified
+        (MotorEnable, MotorDirection1, MotorDirection2, encoder, 0.01, 0.001, 0.1, motor1RPM);		// motor controller object, Kp and Ki specified
 DebugMonitor debugger(&refSpeed, encoder, &pc);		        // update status through LCD2004 and Serial Monitor
 ShiftReg7Seg disp1(SPI_MOSI, SPI_MISO, SPI_SCK, SPI_CS, 4, D9); // 7 segments display
 
@@ -150,10 +152,11 @@ void motorStartBtnChangeEvent(bool &motorState) {
 	if (!motorState) {
 		motorBlinkLEDTicker.detach();
 		MotorLED = 0;
+		motor1->setRefVolt(0);
 	}
 	else {
 		motor1->setRefVolt(refSpeedFloat);
-		motorSteadySignal = false;
+		motorSteadySignal = false; //this will trigger LED blinker to activate
 	}
 
 	// disable motor button till next MotorLED blink .... to avoid noisy signal
@@ -197,6 +200,7 @@ void displayCurrentSpeed(){
     		disp1.display(1/(motor1->readRefRPM()));
     	}
     	else{
+    	    refSpeedFloat = refSpeed.read();
 			disp1.display(1/(refSpeedFloat*motor1RPM));
     	}
 //        disp1.display(refSpeedFloat*100);
@@ -229,7 +233,7 @@ int main() {
 	pc.printf("Ready\n");
 
 	while (1) {
-	    refSpeedFloat = refSpeed.read() *0.86 + 0.145;
+//	    refSpeedFloat = refSpeed.read() *0.86 + 0.145;
 		if (motorStartBtnChange.value) {motorRunner();}
 		else { motorStopper(); }
 	}
