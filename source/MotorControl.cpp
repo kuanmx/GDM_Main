@@ -133,7 +133,7 @@ float MotorControl::readRefRPM() const {
     return _refVolt*_ratedRPM;
 }
 bool MotorControl::checkSteady() {
-    const float steadyStateCriteria = 0.01;           // steady state fluctuation within 0.001
+    const float steadyStateCriteria = 12;           // steady state fluctuation within 0.001
 
     // increase steady count if fluctuation limit reached... reset if out of range
 //    (abs(powerSmooth.getValue() - _prevPower) < steadyStateCriteria) ? steadyCount += 1 : steadyCount = 0;

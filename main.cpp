@@ -48,7 +48,7 @@ DigitalOut MotorDirectionPin2(MotorDirection2);
 RawSerial pc(SERIAL_TX, SERIAL_RX, 115200);		                // serial communication protocol
 std::shared_ptr<EncodedMotor> encoder = std::make_shared<EncodedMotor>(MotorEncoderA, MotorEncoderB, 1848*4*50, 10, EncodeType::X4);		// Encoded Motor object
 std::unique_ptr<MotorControl> motor1 = std::make_unique<MotorControl>
-        (MotorEnable, MotorDirection1, MotorDirection2, encoder, 0.01, 0.001, 0, motor1RPM);		// motor controller object, Kp, Ki, Kd specified
+        (MotorEnable, MotorDirection1, MotorDirection2, encoder, 0.20, 0.005, 0.08, motor1RPM);		// motor controller object, Kp, Ki, Kd specified
 DebugMonitor debugger(&refSpeed, encoder, &pc);		        	// update status through LCD2004 and Serial Monitor
 ShiftReg7Seg disp1(SPI_MOSI, SPI_MISO, SPI_SCK, SPI_CS, 4, D9); // 7 segments display
 
@@ -189,7 +189,6 @@ void MotorLEDBlinker(bool& motorSteady)			// Run motor and set motorOnLED to bli
 {
 	if (motorSteady) { motorBlinkLEDTicker.detach(); MotorLED = 1; }
 	else motorBlinkLEDTicker.attach([]() {MotorLED = !MotorLED; }, 0.5f);
-
 }
 void displayCurrentSpeed(){
     while(1){
@@ -212,9 +211,12 @@ int main() {
 	// I2C_scan();
 
 	// Initiate Interrupt and Ticker
-	motorBtn.rise([]() {motorStartBtnChange = !motorStartBtnChange; });				// motorBtn OnChange
+	motorBtn.rise([]() {
+	    prevMotorSteady = false;
+	    motorStartBtnChange = !motorStartBtnChange; });				// motorBtn OnChange
 	weldingBtn.rise([&]() {
-		bool toSolenoid = motorStartBtnChange.value && !weldSignal;
+		//bool toSolenoid = motorStartBtnChange.value && !weldSignal  && motorSteadySignal.value;   //temp change - disable check steady
+        bool toSolenoid = motorStartBtnChange.value && !weldSignal;
 		toSolenoid ? weldSignal = true : weldSignal = false; });					// weldingBtn OnChange
     motorChgDirBtn.rise([](){motor1->chgDirection(); });
 	statusUpdater.attach([](){statusUpdateFlag.set(0x1); }, 0.5f);					// periodic status update via flag

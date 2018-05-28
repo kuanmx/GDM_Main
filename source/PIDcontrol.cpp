@@ -1,5 +1,8 @@
 #include "mbed.h"
 #include "PIDcontrol.h"
+#include "MovingAverage.h"
+
+MovingAverage<float,21> smoothing_D;
 
 PIDcontrol::PIDcontrol(float Kp, float Ki, float Kd)
 	: _Kp(Kp), _Ki(Ki), _Kd(Kd)
@@ -35,5 +38,6 @@ float PIDcontrol::I_signal()
 
 float PIDcontrol::D_signal() {
     float signal = (_thisError - _prevError)/_timeStep;
-    return 0;
+	smoothing_D.AddData(signal);
+    return smoothing_D.getValue();
 }
