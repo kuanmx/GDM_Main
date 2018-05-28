@@ -150,10 +150,11 @@ void motorStartBtnChangeEvent(bool &motorState) {
 	if (!motorState) {
 		motorBlinkLEDTicker.detach();
 		MotorLED = 0;
+		motor1->setRefVolt(0);
 	}
 	else {
 		motor1->setRefVolt(refSpeedFloat);
-		motorSteadySignal = false;
+		motorSteadySignal = false; //this will trigger LED blinker to activate
 	}
 
 	// disable motor button till next MotorLED blink .... to avoid noisy signal
@@ -196,6 +197,7 @@ void displayCurrentSpeed(){
     		disp1.display(1/(motor1->readRefRPM()));
     	}
     	else{
+    	    refSpeedFloat = refSpeed.read();
 			disp1.display(1/(refSpeedFloat*motor1RPM));
     	}
 //        disp1.display(refSpeedFloat*100);
@@ -231,7 +233,7 @@ int main() {
 	pc.printf("Ready\n");
 
 	while (1) {
-	    refSpeedFloat = refSpeed.read() *0.86 + 0.145;
+//	    refSpeedFloat = refSpeed.read() *0.86 + 0.145;
 		if (motorStartBtnChange.value) {motorRunner();}
 		else { motorStopper(); }
 	}
