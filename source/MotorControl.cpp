@@ -1,9 +1,6 @@
 #include "MotorControl.h"
 #include "EncodedMotor.h"
 #include "PIDcontrol.h"
-#include "MovingAverage.h"
-
-MovingAverage<float, 11> refSmoothing;
 
 MotorControl::MotorControl(PinName motorEnable, PinName motorDirectionPin1, PinName motorDirectionPin2,
                            std::shared_ptr<EncodedMotor> &encodedMotor,
@@ -30,16 +27,15 @@ bool MotorControl::run()
 
 		// PI Controller
 		_compVolt += _piControl->compensateSignal(_adjErrorVolt, timeStep);
-        if(_compVolt > 100 ){_compVolt = 100.0f;}           // set range of _compVolt to 0.0 - 100.0
+        if(_compVolt > 100 ){_compVolt = 100.0f;}               // set range of _compVolt to 0.0 - 100.0
         else if (_compVolt < 0.0f) {_compVolt = 0.0f;}
 
 
-        _motorEnable.write(_compVolt/100);    // output to Motor
+        _motorEnable.write(_compVolt/100);      // output to Motor
 
-		_prevTime = _thisTime;		// update TimeStep
+		_prevTime = _thisTime;		            // update TimeStep
         isSteady = checkSteady();
 	}
-
 	return isSteady;
 }
 
@@ -132,6 +128,11 @@ float MotorControl::readAdjError() { return _adjErrorVolt; }
 float MotorControl::readRefRPM() const {
     return _refVolt*_ratedRPM;
 }
+
+float MotorControl::readRefVolt() {
+    return _refVolt;
+}
+
 bool MotorControl::checkSteady() {
     const float steadyStateCriteria = 0.01;           // steady state fluctuation within 0.001
 
@@ -142,12 +143,11 @@ bool MotorControl::checkSteady() {
 
     _prevPower = _compVolt;        // update _prevPower for next use
 
-    if (steadyCount >= _continuousSteadyCriteria && _compVolt<99.99) return true;
+    if (steadyCount >= _continuousSteadyCriteria && _compVolt < 5.0f) return true;
     else return false;
 }
 
 unsigned int MotorControl::getSteadyCount() const {
     return steadyCount;
 }
-
 

@@ -24,7 +24,6 @@ public:
 
 	/** start motor
 	* start motor gradually by factor set in MotorControl.h
-	* default factor is 2V / s
 	* max volt per step at 1.2V (0.1f)
 	* start from 1V (PwmOut 0.1f)
 	* input reference power for power (MotorControl will adjust motor to actual power)
@@ -34,7 +33,6 @@ public:
 	
 	/** Stop motor
 	* slow down motor gradually by factor set in MotorControl.h
-	* default factor is 2V / s (0.02f per 100ms)
 	* cut off at 1V (analogRead 0.1f)
 	*/
 	void stop();
@@ -71,6 +69,7 @@ public:
 	float readSpeed();      // return speed voltage
 	float readError();      // return error voltage
 	float readAdjError();   // return adjusted error voltage
+    float readRefVolt();
     float readRefRPM() const;
     unsigned int getSteadyCount() const;
 
